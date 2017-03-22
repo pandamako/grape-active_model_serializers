@@ -20,7 +20,7 @@ module Grape
             ns[:namespace] = options[:version].try(:classify) if options.try(:[], :version)
           end
 
-          serializer = options.fetch(:serializer, ActiveModel::Serializer.serializer_for(resource, ams_options))
+          serializer = options.fetch :serializer, serializer_klass(resource, options)
           return nil unless serializer
 
           options[:scope] = endpoint unless options.key?(:scope)
@@ -57,6 +57,37 @@ module Grape
           else
             endpoint.options[:path][0].to_s.split('/')[-1]
           end
+        end
+
+        def serializer_klass resource, options
+          serializer_class = resource_defined_class resource
+          serializer_class ||= options[:serializer]
+          serializer_class ||= namespace_inferred_class resource, options
+          serializer_class ||= version_inferred_class resource, options
+          serializer_class ||= resource_serializer_klass resource
+          serializer_class 
+        end
+
+        def resource_defined_class resource
+          resource.serializer_class if resource.respond_to?(:serializer_class)
+        end
+
+        def version_inferred_class resource, options
+          "#{version(options)}::#{resource_serializer_klass(resource)}".safe_constantize
+        end
+
+        def version options
+          options[:version].try(:classify)
+        end
+
+        def resource_serializer_klass resource
+          ActiveModel::Serializer.serializer_for(resource)
+        end
+
+        def namespace_inferred_class resource, options
+          return nil unless options[:for]
+          namespace = options[:for].to_s.deconstantize
+          "#{namespace}::#{resource_serializer_klass(resource)}".safe_constantize
         end
       end
     end
