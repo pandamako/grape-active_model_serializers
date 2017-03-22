@@ -73,7 +73,9 @@ module Grape
         end
 
         def version_inferred_class resource, options
-          "#{version(options)}::#{resource_serializer_klass(resource)}".safe_constantize
+          klass = resource_serializer_klass(resource)
+          return unless klass
+          "#{version(options)}::#{klass}".safe_constantize
         end
 
         def version options
@@ -87,7 +89,9 @@ module Grape
         def namespace_inferred_class resource, options
           return nil unless options[:for]
           namespace = options[:for].to_s.deconstantize
-          "#{namespace}::#{resource_serializer_klass(resource)}".safe_constantize
+          klass = resource_serializer_klass(resource)
+          return unless klass
+          "#{namespace}::#{klass}".safe_constantize
         end
       end
     end
