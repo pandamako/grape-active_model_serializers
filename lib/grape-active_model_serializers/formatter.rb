@@ -20,7 +20,7 @@ module Grape
             ns[:namespace] = options[:version].try(:classify) if options.try(:[], :version)
           end
 
-          serializer = options.fetch :serializer, serializer_klass(resource, options)
+          serializer = from_options options, serializer_klass(resource, options)
           return nil unless serializer
 
           options[:scope] = endpoint unless options.key?(:scope)
@@ -61,15 +61,14 @@ module Grape
 
         def serializer_klass resource, options
           serializer_class = resource_defined_class resource
-          serializer_class ||= from_options options
           serializer_class ||= namespace_inferred_class resource, options
           serializer_class ||= version_inferred_class resource, options
           serializer_class ||= resource_serializer_klass resource
           serializer_class
         end
 
-        def from_options options
-          return unless options[:serializer]
+        def from_options options, default_serializer
+          return default_serializer unless options[:serializer]
           if options[:serializer].respond_to? :call
             options[:serializer].call
           else
