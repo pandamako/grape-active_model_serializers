@@ -97,8 +97,7 @@ module Grape
         def namespace_inferred_class resource, options
           return nil unless options[:for]
           namespace = options[:for].to_s.deconstantize
-          klass = resource_serializer_klass(resource)
-          return unless klass
+          klass = "#{resource.class.name}Serializer"
           "#{namespace}::#{klass}".safe_constantize
         end
       end
